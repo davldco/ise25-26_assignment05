@@ -92,6 +92,11 @@ public class CucumberPosSteps {
     }
 
     // TODO: Add Given step for new scenario
+    @Given("POS list with the following elements")
+    public void posListWithTheFollowingElements(List<PosDto> posList) {
+        createdPosList = createPos(posList);
+        assertThat(createdPosList).hasSize(posList.size());
+    }
 
     // When -----------------------------------------------------------------------
 
@@ -102,6 +107,25 @@ public class CucumberPosSteps {
     }
 
     // TODO: Add When step for new scenario
+    @When("the description of {string} is updated to {string}")
+    public void updateDescription(String name, String newDescription) {
+        PosDto pos = retrievePosByName(name);
+
+        PosDto updatedPosDto = PosDto.builder()
+                .id(pos.id())
+                .name(pos.name())
+                .description(newDescription)
+                .type(pos.type())
+                .campus(pos.campus())
+                .street(pos.street())
+                .houseNumber(pos.houseNumber())
+                .postalCode(pos.postalCode())
+                .city(pos.city())
+                .build();
+
+        updatedPos = updatePos(List.of(updatedPosDto)).get(0);
+        assertThat(updatedPos).isNotNull();
+    }
 
     // Then -----------------------------------------------------------------------
 
@@ -114,4 +138,13 @@ public class CucumberPosSteps {
     }
 
     // TODO: Add Then step for new scenario
+    @Then("the POS list should contain the same elements but with the updated description for the specified POS")
+    public void thePosListShouldContainTheSameElementsButWithTheUpdatedDescription() {
+        List<PosDto> retrievedPosList = retrievePos();
+        assertThat(retrievedPosList)
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id", "createdAt", "updatedAt")
+                .containsExactlyInAnyOrderElementsOf(createdPosList.stream()
+                        .map(pos -> pos.name().equals(updatedPos.name()) ? updatedPos : pos)
+                        .toList());
+    }
 }
